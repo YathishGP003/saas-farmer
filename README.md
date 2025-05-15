@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Farmer's Assistant App
+
+A Next.js application that helps farmers with various tasks, including plant disease detection using GPT-4 Vision API.
+
+## Features
+
+### Plant Disease Detection
+
+Upload an image of a diseased plant and get:
+- Disease name
+- Cure recommendations
+- Prevention tips
+
+The app uses OpenAI's GPT-4 Vision API to analyze plant images and provide detailed information.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+1. Node.js 18.x or higher
+2. OpenAI API key with access to GPT-4 Vision
+
+### Setup
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Create a `.env.local` file in the root directory based on `.env.local.example`:
+
+```
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+4. Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+6. Navigate to [Plant Disease Detection](http://localhost:3000/plant-disease) to use the plant disease analysis feature.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How to Use Plant Disease Detection
+
+1. Click on the "Plant Disease Detection" card on the homepage
+2. Upload an image of a plant showing disease symptoms
+3. Click the "Analyze Plant Disease" button
+4. View the results that include disease name, cure recommendations, and prevention tips
+
+## Technologies Used
+
+- Next.js 15
+- React 19
+- OpenAI GPT-4 Vision API
+- TailwindCSS
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+To learn more about the technologies used:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [OpenAI API Documentation](https://platform.openai.com/docs/guides/vision)
+- [TailwindCSS Documentation](https://tailwindcss.com/docs)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
