@@ -28,16 +28,16 @@ export default function Home() {
           
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-6">
-              <h2 className="text-xl font-semibold mb-2">Coming Soon</h2>
+              <h2 className="text-xl font-semibold mb-2">WhatsApp Plant Assistant</h2>
               <p className="text-gray-600 mb-4">
-                More features for farmers are on the way. Stay tuned for updates!
+                Send plant photos via WhatsApp and get instant disease diagnosis and agricultural advice.
               </p>
-              <button 
-                className="inline-block px-6 py-3 bg-gray-300 text-gray-700 rounded-lg cursor-not-allowed"
-                disabled
+              <Link 
+                href="/whatsapp-bot" 
+                className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                Coming Soon
-              </button>
+                Setup WhatsApp Bot
+              </Link>
             </div>
           </div>
         </div>

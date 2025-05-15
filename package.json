@@ -10,13 +10,16 @@
   },
   "dependencies": {
     "formidable": "^3.5.4",
+    "multer": "^1.4.5-lts.2",
     "next": "15.3.2",
     "openai": "^4.98.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "twilio": "^5.6.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/multer": "^1.4.12",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
