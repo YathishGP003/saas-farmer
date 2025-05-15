@@ -10,6 +10,54 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // Make sure to set this in your environment variables
 });
 
+/**
+ * @swagger
+ * /api/analyze-plant:
+ *   post:
+ *     tags:
+ *       - Plant Disease
+ *     summary: Analyze plant disease from image
+ *     description: Upload an image of a plant to detect diseases and get treatment recommendations
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - image
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: The plant image to analyze
+ *     responses:
+ *       200:
+ *         description: Successful analysis
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   description: The name of the detected disease
+ *                   example: "Leaf Spot Disease"
+ *                 cure:
+ *                   type: string
+ *                   description: Recommendations for treating the disease
+ *                   example: "Apply fungicide containing chlorothalonil. Remove and destroy infected leaves. Ensure proper air circulation around plants."
+ *                 prevention:
+ *                   type: string
+ *                   description: Tips to prevent the disease in the future
+ *                   example: "Avoid overhead watering. Plant resistant varieties. Rotate crops regularly. Maintain proper plant spacing."
+ *       400:
+ *         description: No image file provided or invalid request
+ *       500:
+ *         description: Failed to process the image or internal server error
+ */
 export async function POST(req: NextRequest) {
   try {
     // Create a temporary directory if it doesn't exist

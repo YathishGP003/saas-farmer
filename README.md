@@ -1,6 +1,6 @@
 # Farmer's Assistant App
 
-A Next.js application that helps farmers with various tasks, including plant disease detection using GPT-4 Vision API.
+A Next.js application that helps farmers with various tasks, including plant disease detection using GPT-4 Vision API, weather forecasting, and AI-powered farming advice.
 
 ## Features
 
@@ -23,13 +23,30 @@ Send plant images via WhatsApp and receive:
 
 The WhatsApp bot uses Twilio's API and OpenAI's GPT-4 Vision to analyze plant images and provide detailed responses.
 
+### Weather Forecasting & Farming Advice
+
+Get personalized farming advice based on:
+- Current weather and 7-day forecast for your location
+- Crop type selection
+- AI-powered recommendations for:
+  - Watering schedules
+  - Pest risk alerts based on humidity and temperature
+  - Crop protection and preventative measures
+
+Features include:
+- GPS/location-based weather data
+- Manual city selection
+- Hourly weather updates
+- Personalized farming advice using GPT-4
+
 ## Getting Started
 
 ### Prerequisites
 
 1. Node.js 18.x or higher
-2. OpenAI API key with access to GPT-4 Vision
-3. Twilio account (for WhatsApp integration)
+2. OpenAI API key with access to GPT-4 Vision and GPT-4o
+3. OpenWeatherMap API key
+4. Twilio account (for WhatsApp integration)
 
 ### Setup
 
@@ -44,8 +61,11 @@ npm install
 
 ```
 OPENAI_API_KEY=your_openai_api_key_here
+OPENWEATHER_API_KEY=your_openweather_api_key_here
 TWILIO_ACCOUNT_SID=your_twilio_account_sid_here
 TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
+JWT_ACCESS_SECRET=your_access_secret_here
+JWT_REFRESH_SECRET=your_refresh_secret_here
 ```
 
 4. Run the development server:
@@ -54,10 +74,17 @@ TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
+5. (Optional) Start the weather update service for hourly updates:
 
-6. Navigate to [Plant Disease Detection](http://localhost:3000/plant-disease) to use the plant disease analysis feature.
-7. Navigate to [WhatsApp Bot Setup](http://localhost:3000/whatsapp-bot) to set up the WhatsApp integration.
+```bash
+npm run weather:update
+```
+
+6. Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
+
+7. Navigate to [Dashboard](http://localhost:3000/dashboard) to view weather forecast and farming advice.
+8. Navigate to [Plant Disease Detection](http://localhost:3000/plant-disease) to use the plant disease analysis feature.
+9. Navigate to [WhatsApp Bot Setup](http://localhost:3000/whatsapp-bot) to set up the WhatsApp integration.
 
 ## How to Use Plant Disease Detection
 
@@ -65,6 +92,16 @@ npm run dev
 2. Upload an image of a plant showing disease symptoms
 3. Click the "Analyze Plant Disease" button
 4. View the results that include disease name, cure recommendations, and prevention tips
+
+## How to Use Weather & Farming Advice
+
+1. Go to the Dashboard
+2. Either:
+   - Select your city from the dropdown menu, or
+   - Click the location pin button to use your current GPS location
+3. Optionally select a crop type to get crop-specific advice
+4. View the current weather, 7-day forecast, and AI-generated farming advice
+5. Weather data automatically updates every hour
 
 ## How to Set Up WhatsApp Bot
 
@@ -76,11 +113,39 @@ npm run dev
    - Send "help" to get information about the bot
    - Send an image of a plant to get disease analysis
 
+## API Documentation
+
+This application includes comprehensive API documentation using Swagger/OpenAPI specification.
+
+### Accessing the API Documentation
+
+1. Start the development server with `npm run dev`
+2. Navigate to [http://localhost:3000/api-docs](http://localhost:3000/api-docs) in your browser
+3. Explore the interactive API documentation interface
+
+The API documentation provides detailed information about:
+- Available endpoints
+- Required parameters
+- Request and response formats
+- Authentication methods
+- Data models and schemas
+
+### Using the API Documentation
+
+The API documentation is interactive and allows you to:
+1. Browse all available API endpoints
+2. Test API endpoints directly from the browser
+3. View request and response examples
+4. Understand the data models used throughout the application
+
+For developers who want to integrate with the Farmer's Assistant App, the API documentation serves as a comprehensive reference.
+
 ## Technologies Used
 
 - Next.js 15
 - React 19
-- OpenAI GPT-4 Vision API
+- OpenAI GPT-4 Vision API and GPT-4o
+- OpenWeatherMap API
 - Twilio API for WhatsApp
 - TailwindCSS
 
@@ -90,6 +155,7 @@ To learn more about the technologies used:
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [OpenAI API Documentation](https://platform.openai.com/docs/guides/vision)
+- [OpenWeatherMap API Documentation](https://openweathermap.org/api)
 - [TailwindCSS Documentation](https://tailwindcss.com/docs)
 
 ## License
