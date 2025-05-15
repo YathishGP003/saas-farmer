@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { GptAlert } from '@/types/dashboard';
+import { getWithAuth } from '@/utils/api';
 
 // Alert icon based on type
 const alertIcons: Record<string, string> = {
@@ -43,7 +44,7 @@ export default function GptAlerts() {
       try {
         setLoading(true);
         
-        const response = await fetch('/api/gpt-alerts');
+        const response = await getWithAuth('/api/gpt-alerts');
         
         if (!response.ok) {
           throw new Error('Failed to fetch GPT alerts');

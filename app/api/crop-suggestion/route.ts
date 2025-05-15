@@ -9,7 +9,7 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { timeRange, state, plantingSeason, soilType } = await request.json();
+    const { timeRange, state, plantingSeason, soilType, language = 'english' } = await request.json();
     
     // Get climate data for the state
     const climateData = getStateClimateData(state);
@@ -26,7 +26,8 @@ export async function POST(request: Request) {
       soilType,
       currentSeason,
       harvestSeason,
-      climateData
+      climateData,
+      language
     );
     
     return NextResponse.json(suggestions);
@@ -84,7 +85,8 @@ async function generateCropSuggestions(
   soilType: string,
   currentSeason: string,
   harvestSeason: string,
-  climateData: any
+  climateData: any,
+  language: string = 'english'
 ) {
   try {
     const currentDate = new Date();
@@ -136,12 +138,14 @@ Format your response as JSON with the following structure:
     ... more crops
   ]
 }
+
+IMPORTANT: Please provide your entire response in ${language} language.
 `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // Use appropriate model
+      model: "gpt-4.1-mini", // Use appropriate model
       messages: [
-        { role: "system", content: "You are an agricultural expert system specializing in Indian agriculture. You provide detailed, scientifically-accurate crop recommendations based on local conditions." },
+        { role: "system", content: `You are an agricultural expert system specializing in Indian agriculture. You provide detailed, scientifically-accurate crop recommendations based on local conditions. Respond in ${language} language.` },
         { role: "user", content: prompt }
       ],
       response_format: { type: "json_object" }

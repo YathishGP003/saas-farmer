@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { cookies } from 'next/headers';
 
 // Type for token payload
 export interface TokenPayload {
@@ -63,44 +62,11 @@ export const verifyToken = (token: string, isRefreshToken = false): TokenPayload
   return jwt.verify(token, secret) as TokenPayload;
 };
 
-// Set cookies in response
-export const setAuthCookies = (tokens: Tokens) => {
-  const cookieStore = cookies();
+// Get token from Authorization header
+export const getTokenFromHeader = (authHeader: string | null): string | null => {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
   
-  // Access token (http-only, secure in production)
-  cookieStore.set('access_token', tokens.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: process.env.JWT_ACCESS_EXPIRATION 
-      ? parseInt(process.env.JWT_ACCESS_EXPIRATION) 
-      : 3600,
-    path: '/',
-  });
-  
-  // Refresh token (http-only, secure in production)
-  cookieStore.set('refresh_token', tokens.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: process.env.JWT_REFRESH_EXPIRATION 
-      ? parseInt(process.env.JWT_REFRESH_EXPIRATION) 
-      : 2592000,
-    path: '/',
-  });
-};
-
-// Clear auth cookies
-export const clearAuthCookies = () => {
-  const cookieStore = cookies();
-  cookieStore.delete('access_token');
-  cookieStore.delete('refresh_token');
-};
-
-// Get token from cookies or authorization header
-export const getTokenFromRequest = async (isRefreshToken = false): Promise<string | null> => {
-  const cookieStore = cookies();
-  const cookieName = isRefreshToken ? 'refresh_token' : 'access_token';
-  
-  const token = await cookieStore.get(cookieName)?.value;
-  
-  return token || null;
+  return authHeader.split(' ')[1];
 }; 

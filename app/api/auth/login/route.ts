@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { verifyPassword, generateTokens, setAuthCookies } from '@/utils/auth';
+import { verifyPassword, generateTokens } from '@/utils/auth';
 
 // Validation schema for login
 const loginSchema = z.object({
@@ -135,9 +135,6 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
     });
-
-    // Set cookies
-    setAuthCookies(tokens);
 
     // Return user data and tokens
     return NextResponse.json({

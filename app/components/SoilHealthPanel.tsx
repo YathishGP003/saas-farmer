@@ -88,15 +88,15 @@ export default function SoilHealthPanel() {
   };
   
   if (loading) {
-    return <div className="flex justify-center p-8">Loading soil health data...</div>;
+    return <div className="flex justify-center p-8 text-gray-800 font-medium text-lg">Loading soil health data...</div>;
   }
   
   if (error) {
-    return <div className="text-red-500 p-4">Error: {error}</div>;
+    return <div className="text-red-600 p-4 font-medium">Error: {error}</div>;
   }
   
   if (!soilData) {
-    return <div className="text-gray-500 p-4">No soil health data available</div>;
+    return <div className="text-gray-700 p-4 font-medium">No soil health data available</div>;
   }
   
   const { currentSoilHealth, historicalData, recommendations } = soilData;
@@ -107,44 +107,44 @@ export default function SoilHealthPanel() {
   const phPercentage = (currentSoilHealth.ph / 14) * 100;
   
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">Soil Health Overview</h2>
+    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+      <h2 className="text-2xl font-bold mb-4 text-gray-800">Soil Health Overview</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* pH Meter */}
-        <div className="bg-gray-50 p-5 rounded-lg">
-          <h3 className="text-lg font-medium mb-4">Soil pH Level</h3>
+        <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-bold mb-4 text-gray-800">Soil pH Level</h3>
           
           <div className="relative pt-1">
             <div className="flex mb-2 items-center justify-between">
               <div>
-                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-blue-100 text-blue-800">
+                <span className="text-xs font-bold inline-block py-1 px-2 uppercase rounded-full bg-blue-200 text-blue-800">
                   Current pH
                 </span>
               </div>
-              <div className={`text-xl font-bold ${getPHStatusColor(currentSoilHealth.ph)}`}>
+              <div className={`text-2xl font-bold ${getPHStatusColor(currentSoilHealth.ph)}`}>
                 {currentSoilHealth.ph.toFixed(1)}
               </div>
             </div>
             
             {/* pH scale with gradient */}
-            <div className="h-2 bg-gradient-to-r from-red-500 via-green-500 to-red-500 rounded-full">
+            <div className="h-3 bg-gradient-to-r from-red-500 via-green-500 to-red-500 rounded-full">
               <div className="relative">
                 {/* pH indicator marker */}
                 <div 
-                  className="absolute bottom-full w-2 h-4 bg-gray-800" 
+                  className="absolute bottom-full w-3 h-5 bg-gray-800" 
                   style={{ left: `${phPercentage}%`, transform: 'translateX(-50%)' }}
                 ></div>
               </div>
             </div>
             
-            <div className="flex justify-between text-xs mt-1">
+            <div className="flex justify-between text-sm font-medium mt-1 text-gray-700">
               <span>Acidic (0)</span>
               <span>Neutral (7)</span>
               <span>Alkaline (14)</span>
             </div>
             
-            <div className="mt-3 text-sm">
+            <div className="mt-3 text-sm font-bold">
               <span className={getPHStatusColor(currentSoilHealth.ph)}>
                 {currentSoilHealth.ph < 6.0 ? 'Acidic' :
                  currentSoilHealth.ph <= 7.5 ? 'Optimal' : 'Alkaline'} soil pH
@@ -154,39 +154,39 @@ export default function SoilHealthPanel() {
         </div>
         
         {/* NPK Balance Radar Chart */}
-        <div className="bg-gray-50 p-5 rounded-lg">
-          <h3 className="text-lg font-medium mb-4">NPK & Organic Matter</h3>
+        <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-bold mb-4 text-gray-800">NPK & Organic Matter</h3>
           
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart outerRadius={80} data={npkData}>
                 <PolarGrid />
-                <PolarAngleAxis dataKey="subject" />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: '#1F2937', fontSize: 12, fontWeight: 600 }} />
+                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#1F2937' }} />
                 <Radar
                   name="Nutrient Levels"
                   dataKey="A"
-                  stroke="#4CAF50"
-                  fill="#4CAF50"
+                  stroke="#22C55E"
+                  fill="#22C55E"
                   fillOpacity={0.6}
                 />
-                <Tooltip />
-                <Legend />
+                <Tooltip contentStyle={{ fontWeight: 'bold', border: '2px solid #E5E7EB' }} />
+                <Legend formatter={(value) => <span className="font-bold text-gray-800">{value}</span>} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
           
-          <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-            <div>Nitrogen: <span className="font-semibold">{currentSoilHealth.nitrogen} ppm</span></div>
-            <div>Phosphorus: <span className="font-semibold">{currentSoilHealth.phosphorus} ppm</span></div>
-            <div>Potassium: <span className="font-semibold">{currentSoilHealth.potassium} ppm</span></div>
-            <div>Organic Matter: <span className="font-semibold">{currentSoilHealth.organicMatter}%</span></div>
+          <div className="grid grid-cols-2 gap-2 mt-2 text-sm font-medium text-gray-800">
+            <div>Nitrogen: <span className="font-bold">{currentSoilHealth.nitrogen} ppm</span></div>
+            <div>Phosphorus: <span className="font-bold">{currentSoilHealth.phosphorus} ppm</span></div>
+            <div>Potassium: <span className="font-bold">{currentSoilHealth.potassium} ppm</span></div>
+            <div>Organic Matter: <span className="font-bold">{currentSoilHealth.organicMatter}%</span></div>
           </div>
         </div>
         
         {/* Historical Soil Data */}
-        <div className="bg-gray-50 p-5 rounded-lg">
-          <h3 className="text-lg font-medium mb-4">pH Trend</h3>
+        <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-bold mb-4 text-gray-800">pH Trend</h3>
           
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -197,22 +197,23 @@ export default function SoilHealthPanel() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="date"
-                  tick={{ fontSize: 10 }}
+                  tick={{ fontSize: 11, fill: '#1F2937', fontWeight: 600 }}
                   tickFormatter={(value) => {
                     const date = new Date(value);
                     return `${date.getMonth() + 1}/${date.getDate()}`;
                   }}
                 />
-                <YAxis domain={[5, 8]} tick={{ fontSize: 10 }} />
-                <Tooltip labelFormatter={(label) => new Date(label).toLocaleDateString()} />
-                <Legend />
+                <YAxis domain={[5, 8]} tick={{ fontSize: 11, fill: '#1F2937', fontWeight: 600 }} />
+                <Tooltip contentStyle={{ fontWeight: 'bold', border: '2px solid #E5E7EB' }} labelFormatter={(label) => new Date(label).toLocaleDateString()} />
+                <Legend formatter={(value) => <span className="font-bold text-gray-800">{value}</span>} />
                 <Line
                   type="monotone"
                   dataKey="ph"
                   name="pH Level"
-                  stroke="#8884d8"
-                  dot={{ r: 2 }}
-                  activeDot={{ r: 5 }}
+                  stroke="#6366F1"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: '#6366F1', stroke: '#6366F1' }}
+                  activeDot={{ r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -221,17 +222,17 @@ export default function SoilHealthPanel() {
       </div>
       
       {/* Recommendations */}
-      <div className="mt-6 bg-yellow-50 p-5 rounded-lg">
-        <h3 className="text-lg font-medium mb-3 text-yellow-800">Soil Recommendations</h3>
+      <div className="mt-6 bg-yellow-50 p-5 rounded-lg border border-yellow-200 shadow-sm">
+        <h3 className="text-lg font-bold mb-3 text-yellow-800">Soil Recommendations</h3>
         
         <ul className="list-disc pl-5 space-y-2">
           {recommendations.map((recommendation, index) => (
-            <li key={index} className="text-yellow-900">{recommendation}</li>
+            <li key={index} className="text-yellow-900 font-medium">{recommendation}</li>
           ))}
         </ul>
       </div>
       
-      <div className="mt-4 text-sm text-gray-600 italic">
+      <div className="mt-4 text-sm text-gray-700 font-medium">
         Last soil test: {new Date(currentSoilHealth.lastUpdated || '').toLocaleDateString()}
       </div>
     </div>

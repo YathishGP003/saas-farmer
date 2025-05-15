@@ -61,4 +61,19 @@ export async function POST(request: NextRequest) {
       { status: 401 }
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    // Get refresh token from cookies
+    let refreshToken = await getTokenFromRequest(true);
+    
+    // ... existing code ...
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    return NextResponse.json(
+      { error: 'Invalid or expired refresh token' },
+      { status: 401 }
+    );
+  }
 } 

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken, getTokenFromRequest } from '@/utils/auth';
+import { verifyToken, getTokenFromHeader } from '@/utils/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get token from cookies or header
-    const token = getTokenFromRequest();
+    // Get token from authorization header
+    const authHeader = request.headers.get('authorization');
+    const token = getTokenFromHeader(authHeader);
     
     if (!token) {
       return NextResponse.json(

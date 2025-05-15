@@ -16,36 +16,36 @@ const columnHelper = createColumnHelper<DiseaseLog>();
 
 const columns = [
   columnHelper.accessor('cropName', {
-    header: 'Crop',
-    cell: info => info.getValue(),
+    header: 'CROP',
+    cell: info => <span className="font-medium text-gray-800">{info.getValue()}</span>,
   }),
   columnHelper.accessor('diseaseName', {
-    header: 'Disease',
-    cell: info => info.getValue(),
+    header: 'DISEASE',
+    cell: info => <span className="font-medium text-gray-800">{info.getValue()}</span>,
   }),
   columnHelper.accessor('diagnosisDate', {
-    header: 'Diagnosis Date',
-    cell: info => new Date(info.getValue()).toLocaleDateString(),
+    header: 'DIAGNOSIS DATE',
+    cell: info => <span className="font-medium text-gray-800">{new Date(info.getValue()).toLocaleDateString()}</span>,
   }),
   columnHelper.accessor('severity', {
-    header: 'Severity',
+    header: 'SEVERITY',
     cell: info => {
       const severity = info.getValue();
       const color = 
-        severity === 'High' ? 'text-red-600 bg-red-100' : 
-        severity === 'Medium' ? 'text-yellow-600 bg-yellow-100' : 
-        'text-green-600 bg-green-100';
+        severity === 'High' ? 'text-white bg-red-500 font-bold' : 
+        severity === 'Medium' ? 'text-white bg-yellow-500 font-bold' : 
+        'text-white bg-green-500 font-bold';
       
       return (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>
+        <span className={`px-3 py-1 rounded-full text-sm ${color}`}>
           {severity}
         </span>
       );
     },
   }),
   columnHelper.accessor('region', {
-    header: 'Region',
-    cell: info => info.getValue(),
+    header: 'REGION',
+    cell: info => <span className="font-medium text-gray-800">{info.getValue()}</span>,
   }),
 ];
 
@@ -120,22 +120,22 @@ export default function DiseaseLogsPanel() {
   });
 
   if (loading) {
-    return <div className="flex justify-center p-8">Loading disease logs...</div>;
+    return <div className="flex justify-center p-8 text-gray-800 font-medium text-lg">Loading disease logs...</div>;
   }
 
   if (error) {
-    return <div className="text-red-500 p-4">Error: {error}</div>;
+    return <div className="text-red-600 p-4 font-medium">Error: {error}</div>;
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">Disease Diagnosis Logs</h2>
+    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+      <h2 className="text-2xl font-bold mb-4 text-gray-800">Disease Diagnosis Logs</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Crop</label>
+          <label className="block text-sm font-bold text-gray-700 mb-1">Crop</label>
           <select
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-800"
             value={cropFilter}
             onChange={e => setCropFilter(e.target.value)}
           >
@@ -147,9 +147,9 @@ export default function DiseaseLogsPanel() {
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Region</label>
+          <label className="block text-sm font-bold text-gray-700 mb-1">Region</label>
           <select
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-800"
             value={regionFilter}
             onChange={e => setRegionFilter(e.target.value)}
           >
@@ -161,35 +161,35 @@ export default function DiseaseLogsPanel() {
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+          <label className="block text-sm font-bold text-gray-700 mb-1">Start Date</label>
           <input
             type="date"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-800"
             value={startDate}
             onChange={e => setStartDate(e.target.value)}
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+          <label className="block text-sm font-bold text-gray-700 mb-1">End Date</label>
           <input
             type="date"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-800"
             value={endDate}
             onChange={e => setEndDate(e.target.value)}
           />
         </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+        <table className="min-w-full divide-y divide-gray-300">
+          <thead className="bg-gray-100">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200"
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     {flexRender(
@@ -211,7 +211,7 @@ export default function DiseaseLogsPanel() {
             {table.getRowModel().rows.map(row => (
               <tr key={row.id} className="hover:bg-gray-50">
                 {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-gray-800">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -224,21 +224,21 @@ export default function DiseaseLogsPanel() {
       <div className="flex items-center justify-between mt-4">
         <div className="flex items-center gap-2">
           <button
-            className="px-3 py-1 border rounded-md disabled:opacity-50"
+            className="px-4 py-2 border-2 rounded-md font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
             Previous
           </button>
           <button
-            className="px-3 py-1 border rounded-md disabled:opacity-50"
+            className="px-4 py-2 border-2 rounded-md font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
             Next
           </button>
         </div>
-        <span className="text-sm text-gray-700">
+        <span className="text-sm font-medium text-gray-700">
           Page {table.getState().pagination.pageIndex + 1} of{' '}
           {table.getPageCount()}
         </span>

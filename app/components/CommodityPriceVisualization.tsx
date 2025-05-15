@@ -202,10 +202,9 @@ export default function CommodityPriceVisualization() {
                 <Bar
                   dataKey="price"
                   name="Price (₹/Quintal)"
-                  fill="#4CAF50"
                   radius={[4, 4, 0, 0]}
                   barSize={40}
-                  fill={({ crop }) => cropColors[crop] || '#8884d8'}
+                  fill="#8884d8"
                 />
               </BarChart>
             </ResponsiveContainer>

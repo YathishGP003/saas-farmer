@@ -3,7 +3,7 @@ import { clearAuthCookies } from '@/utils/auth';
 
 export async function POST(request: NextRequest) {
   // Clear authentication cookies
-  clearAuthCookies();
+  await clearAuthCookies();
   
   // Return success response
   return NextResponse.json({ success: true });
