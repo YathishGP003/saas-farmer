@@ -37,7 +37,7 @@ export default function LoginPage() {
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // Redirect to dashboard on success
-      router.push('/dashboard');
+      router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
