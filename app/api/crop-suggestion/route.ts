@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { cropData, getCurrentSeason, getHarvestSeason, regionClimateData } from '@/utils/cropData';
+import prisma from '@/lib/prisma';
+import { getTokenFromHeader, verifyToken } from '@/utils/auth';
+import { TokenPayload } from '@/utils/auth';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -9,6 +12,28 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
+    // Get auth token from header
+    const authHeader = request.headers.get('authorization');
+    const token = getTokenFromHeader(authHeader);
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    
+    // Verify token and get user ID
+    let userData: TokenPayload;
+    try {
+      userData = verifyToken(token);
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+
     const { timeRange, state, plantingSeason, soilType, language = 'english' } = await request.json();
     
     // Get climate data for the state
@@ -29,6 +54,34 @@ export async function POST(request: Request) {
       climateData,
       language
     );
+    
+    // Try to save the query to database
+    try {
+      // Create a structured record in the database
+      await prisma.$queryRaw`
+        INSERT INTO crop_queries (
+          user_id, 
+          crop_name,
+          region,
+          date_range,
+          queried_at,
+          created_at,
+          updated_at
+        ) 
+        VALUES (
+          ${userData.userId}, 
+          'Multiple crops',
+          ${state},
+          ${timeRange.toString()},
+          NOW(),
+          NOW(),
+          NOW()
+        )
+      `;
+    } catch (dbError) {
+      console.error('Error saving crop suggestion to database:', dbError);
+      // Continue with response even if database save fails
+    }
     
     return NextResponse.json(suggestions);
   } catch (error) {
@@ -169,4 +222,4 @@ IMPORTANT: Please provide your entire response in ${language} language.
       ]
     };
   }
-} 
+}

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { regionClimateData } from '@/utils/cropData';
+import prisma from '@/lib/prisma';
+import { getTokenFromHeader, verifyToken } from '@/utils/auth';
+import { TokenPayload } from '@/utils/auth';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -9,7 +12,29 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { pH, nitrogen, phosphorus, potassium, moisture, state, district } = await request.json();
+    // Get auth token from header
+    const authHeader = request.headers.get('authorization');
+    const token = getTokenFromHeader(authHeader);
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    
+    // Verify token and get user ID
+    let userData: TokenPayload;
+    try {
+      userData = verifyToken(token);
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+
+    const { pH, nitrogen, phosphorus, potassium, moisture, state, district, language = 'english' } = await request.json();
     
     // Get climate data for the state if provided
     let climateData = { description: "Variable climate conditions", rainfall: "moderate" };
@@ -26,8 +51,28 @@ export async function POST(request: Request) {
       moisture,
       state,
       district,
-      climateData
+      climateData,
+      language
     );
+    
+    // Save soil health report to database
+    try {
+      await prisma.soilHealthReport.create({
+        data: {
+          userId: userData.userId,
+          ph: pH,
+          nitrogen: nitrogen,
+          phosphorus: phosphorus,
+          potassium: potassium,
+          organicMatter: moisture, // Using moisture as organic matter approximation
+          region: state || 'Not specified',
+          submittedAt: new Date()
+        }
+      });
+    } catch (dbError) {
+      console.error('Error saving soil health report to database:', dbError);
+      // Continue with response even if database save fails
+    }
     
     return NextResponse.json(recommendations);
   } catch (error) {
@@ -85,7 +130,8 @@ async function generateSoilRecommendations(
   moisture: number,
   state: string,
   district: string,
-  climateData: any
+  climateData: any,
+  language: string = 'english'
 ) {
   try {
     // Interpret soil acidity/alkalinity
@@ -165,12 +211,17 @@ Format your response as JSON with the following structure:
   },
   "sustainablePractices": ["Practice 1", "Practice 2", ...]
 }
+
+IMPORTANT: Please provide your entire response in ${language} language.
 `;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // Use appropriate model
       messages: [
-        { role: "system", content: "You are an agricultural soil specialist with expertise in Indian farming practices. You provide detailed, scientifically-accurate soil management recommendations based on soil test results." },
+        { 
+          role: "system", 
+          content: `You are an agricultural soil specialist with expertise in Indian farming practices. You provide detailed, scientifically-accurate soil management recommendations based on soil test results. Respond in ${language} language.` 
+        },
         { role: "user", content: prompt }
       ],
       response_format: { type: "json_object" }

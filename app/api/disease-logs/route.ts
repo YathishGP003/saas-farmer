@@ -1,90 +1,145 @@
 import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { getTokenFromHeader, verifyToken } from '@/utils/auth';
+import { TokenPayload } from '@/utils/auth';
 
-// This would typically connect to your database
-// For now, we'll create some sample data
-const sampleDiseaseLogs = [
-  {
-    id: '1',
-    cropName: 'Rice',
-    diseaseName: 'Blast',
-    diagnosisDate: '2024-05-10T08:30:00.000Z',
-    severity: 'High',
-    region: 'Karnataka',
-    userId: 'user1'
-  },
-  {
-    id: '2',
-    cropName: 'Wheat',
-    diseaseName: 'Rust',
-    diagnosisDate: '2024-05-12T14:20:00.000Z',
-    severity: 'Medium',
-    region: 'Tamil Nadu',
-    userId: 'user2'
-  },
-  {
-    id: '3',
-    cropName: 'Cotton',
-    diseaseName: 'Boll Rot',
-    diagnosisDate: '2024-05-09T11:45:00.000Z',
-    severity: 'Low',
-    region: 'Karnataka',
-    userId: 'user1'
-  },
-  {
-    id: '4',
-    cropName: 'Tomato',
-    diseaseName: 'Early Blight',
-    diagnosisDate: '2024-05-13T09:15:00.000Z',
-    severity: 'High',
-    region: 'Tamil Nadu',
-    userId: 'user3'
-  },
-  {
-    id: '5',
-    cropName: 'Maize',
-    diseaseName: 'Leaf Spot',
-    diagnosisDate: '2024-05-11T16:30:00.000Z',
-    severity: 'Medium',
-    region: 'Karnataka',
-    userId: 'user2'
-  },
-];
+
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const crop = searchParams.get('crop');
-  const region = searchParams.get('region');
-  const startDate = searchParams.get('startDate');
-  const endDate = searchParams.get('endDate');
-  
-  let filteredLogs = [...sampleDiseaseLogs];
-  
-  // Apply filters
-  if (crop) {
-    filteredLogs = filteredLogs.filter(log => 
-      log.cropName.toLowerCase() === crop.toLowerCase()
+  try {
+    const { searchParams } = new URL(request.url);
+    const crop = searchParams.get('crop');
+    const region = searchParams.get('region');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    
+    // Get auth token from header
+    const authHeader = request.headers.get('authorization');
+    const token = getTokenFromHeader(authHeader);
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    
+    // Verify token and get user ID
+    let userData: TokenPayload;
+    try {
+      userData = verifyToken(token);
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+    
+    // Build the database query
+    const whereClause: any = {};
+    
+    // Apply user filter - only show user's own reports
+    whereClause.userId = userData.userId;
+    
+    // Apply filters
+    if (crop) {
+      whereClause.cropName = {
+        equals: crop,
+        mode: 'insensitive' // Case-insensitive match
+      };
+    }
+    
+    if (region) {
+      whereClause.region = {
+        equals: region,
+        mode: 'insensitive' // Case-insensitive match
+      };
+    }
+    
+    if (startDate) {
+      whereClause.diagnosisDate = {
+        ...(whereClause.diagnosisDate || {}),
+        gte: new Date(startDate)
+      };
+    }
+    
+    if (endDate) {
+      whereClause.diagnosisDate = {
+        ...(whereClause.diagnosisDate || {}),
+        lte: new Date(endDate)
+      };
+    }
+    
+    // Query the database
+    const diseaseLogs = await prisma.diseaseReport.findMany({
+      where: whereClause,
+      orderBy: {
+        diagnosisDate: 'desc'
+      }
+    });
+    
+    return NextResponse.json(diseaseLogs);
+  } catch (error) {
+    console.error('Error fetching disease logs:', error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
-  
-  if (region) {
-    filteredLogs = filteredLogs.filter(log => 
-      log.region.toLowerCase() === region.toLowerCase()
+}
+
+export async function POST(request: Request) {
+  try {
+    // Get auth token from header
+    const authHeader = request.headers.get('authorization');
+    const token = getTokenFromHeader(authHeader);
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    
+    // Verify token and get user ID
+    let userData: TokenPayload;
+    try {
+      userData = verifyToken(token);
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+    
+    const { cropName, diseaseDetected, region, severity } = await request.json();
+    
+    // Validate required fields
+    if (!cropName || !diseaseDetected || !region || !severity) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+    
+    // Create new disease report in database
+    const newDiseaseReport = await prisma.diseaseReport.create({
+      data: {
+        userId: userData.userId,
+        cropName,
+        diseaseDetected,
+        region,
+        severity,
+        diagnosisDate: new Date()
+      }
+    });
+    
+    return NextResponse.json(newDiseaseReport, { status: 201 });
+  } catch (error) {
+    console.error('Error creating disease report:', error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
-  
-  if (startDate) {
-    const start = new Date(startDate).getTime();
-    filteredLogs = filteredLogs.filter(log => 
-      new Date(log.diagnosisDate).getTime() >= start
-    );
-  }
-  
-  if (endDate) {
-    const end = new Date(endDate).getTime();
-    filteredLogs = filteredLogs.filter(log => 
-      new Date(log.diagnosisDate).getTime() <= end
-    );
-  }
-  
-  return NextResponse.json(filteredLogs);
 } 

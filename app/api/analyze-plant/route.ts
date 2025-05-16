@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
-import * as formidable from 'formidable';
+
 import fs from 'fs';
 import { promisify } from 'util';
 import path from 'path';
@@ -33,6 +33,10 @@ const openai = new OpenAI({
  *                 type: string
  *                 format: binary
  *                 description: The plant image to analyze
+ *               language:
+ *                 type: string
+ *                 description: The language for the response
+ *                 example: "english"
  *     responses:
  *       200:
  *         description: Successful analysis
@@ -72,6 +76,7 @@ export async function POST(req: NextRequest) {
     // Parse form data with image
     const formData = await req.formData();
     const imageFile = formData.get('image') as File;
+    const language = formData.get('language') as string || 'english';
 
     if (!imageFile) {
       return NextResponse.json(
@@ -94,14 +99,18 @@ export async function POST(req: NextRequest) {
 
     // Call GPT-4 Vision API
     const response = await openai.chat.completions.create({
-      model: 'gpt-4-vision-preview',
+      model: 'gpt-4.1-mini',
       messages: [
+        {
+          role: 'system',
+          content: `You are a plant disease detection specialist. Analyze the provided plant image and identify any diseases or issues present. Provide your response in ${language} language.`
+        },
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: 'This is an image of a plant that may have a disease. Please analyze it and provide the following details in JSON format: 1) Disease name, 2) Cure recommendations, 3) Prevention tips. Please format your response as a valid JSON object with fields "name", "cure", and "prevention".',
+              text: `This is an image of a plant that may have a disease. Please analyze it and provide the following details in JSON format: 1) Disease name, 2) Cure recommendations, 3) Prevention tips. Please format your response as a valid JSON object with fields "name", "cure", and "prevention". Provide your entire response in ${language} language.`,
             },
             {
               type: 'image_url',

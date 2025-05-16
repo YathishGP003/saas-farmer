@@ -128,23 +128,23 @@ export default function SoilHealthPanel() {
             </div>
             
             {/* pH scale with gradient */}
-            <div className="h-3 bg-gradient-to-r from-red-500 via-green-500 to-red-500 rounded-full">
+            <div className="h-4 bg-gradient-to-r from-red-500 via-green-500 to-red-500 rounded-full">
               <div className="relative">
-                {/* pH indicator marker */}
+                {/* pH indicator marker - increased width and height for better visibility */}
                 <div 
-                  className="absolute bottom-full w-3 h-5 bg-gray-800" 
+                  className="absolute bottom-full w-5 h-7 bg-gray-800 border-2 border-white shadow-md rounded-sm" 
                   style={{ left: `${phPercentage}%`, transform: 'translateX(-50%)' }}
                 ></div>
               </div>
             </div>
             
-            <div className="flex justify-between text-sm font-medium mt-1 text-gray-700">
+            <div className="flex justify-between text-sm font-semibold mt-1 text-gray-800">
               <span>Acidic (0)</span>
               <span>Neutral (7)</span>
               <span>Alkaline (14)</span>
             </div>
             
-            <div className="mt-3 text-sm font-bold">
+            <div className="mt-3 text-base font-bold">
               <span className={getPHStatusColor(currentSoilHealth.ph)}>
                 {currentSoilHealth.ph < 6.0 ? 'Acidic' :
                  currentSoilHealth.ph <= 7.5 ? 'Optimal' : 'Alkaline'} soil pH
@@ -160,23 +160,24 @@ export default function SoilHealthPanel() {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart outerRadius={80} data={npkData}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: '#1F2937', fontSize: 12, fontWeight: 600 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#1F2937' }} />
+                <PolarGrid stroke="#9CA3AF" />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: '#1F2937', fontSize: 13, fontWeight: 600 }} />
+                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#1F2937', fontSize: 12 }} />
                 <Radar
                   name="Nutrient Levels"
                   dataKey="A"
                   stroke="#22C55E"
                   fill="#22C55E"
                   fillOpacity={0.6}
+                  strokeWidth={2}
                 />
-                <Tooltip contentStyle={{ fontWeight: 'bold', border: '2px solid #E5E7EB' }} />
+                <Tooltip contentStyle={{ fontWeight: 'bold', border: '2px solid #E5E7EB', fontSize: '14px' }} />
                 <Legend formatter={(value) => <span className="font-bold text-gray-800">{value}</span>} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
           
-          <div className="grid grid-cols-2 gap-2 mt-2 text-sm font-medium text-gray-800">
+          <div className="grid grid-cols-2 gap-2 mt-3 text-sm font-semibold text-gray-800">
             <div>Nitrogen: <span className="font-bold">{currentSoilHealth.nitrogen} ppm</span></div>
             <div>Phosphorus: <span className="font-bold">{currentSoilHealth.phosphorus} ppm</span></div>
             <div>Potassium: <span className="font-bold">{currentSoilHealth.potassium} ppm</span></div>
@@ -194,26 +195,26 @@ export default function SoilHealthPanel() {
                 data={historyChartData}
                 margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#9CA3AF" />
                 <XAxis 
                   dataKey="date"
-                  tick={{ fontSize: 11, fill: '#1F2937', fontWeight: 600 }}
+                  tick={{ fontSize: 12, fill: '#1F2937', fontWeight: 600 }}
                   tickFormatter={(value) => {
                     const date = new Date(value);
                     return `${date.getMonth() + 1}/${date.getDate()}`;
                   }}
                 />
-                <YAxis domain={[5, 8]} tick={{ fontSize: 11, fill: '#1F2937', fontWeight: 600 }} />
-                <Tooltip contentStyle={{ fontWeight: 'bold', border: '2px solid #E5E7EB' }} labelFormatter={(label) => new Date(label).toLocaleDateString()} />
-                <Legend formatter={(value) => <span className="font-bold text-gray-800">{value}</span>} />
+                <YAxis domain={[5, 8]} tick={{ fontSize: 12, fill: '#1F2937', fontWeight: 600 }} />
+                <Tooltip contentStyle={{ fontWeight: 'bold', border: '2px solid #E5E7EB', fontSize: '14px' }} labelFormatter={(label) => new Date(label).toLocaleDateString()} />
+                <Legend formatter={(value) => <span className="font-bold text-gray-800 text-base">{value}</span>} />
                 <Line
                   type="monotone"
                   dataKey="ph"
                   name="pH Level"
-                  stroke="#6366F1"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: '#6366F1', stroke: '#6366F1' }}
-                  activeDot={{ r: 6 }}
+                  stroke="#4F46E5"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#4F46E5', stroke: '#4F46E5' }}
+                  activeDot={{ r: 7 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -221,18 +222,18 @@ export default function SoilHealthPanel() {
         </div>
       </div>
       
-      {/* Recommendations */}
-      <div className="mt-6 bg-yellow-50 p-5 rounded-lg border border-yellow-200 shadow-sm">
-        <h3 className="text-lg font-bold mb-3 text-yellow-800">Soil Recommendations</h3>
+      {/* Recommendations - improved contrast with darker background and text */}
+      <div className="mt-6 bg-amber-100 p-5 rounded-lg border border-amber-300 shadow-sm">
+        <h3 className="text-lg font-bold mb-3 text-amber-900">Soil Recommendations</h3>
         
         <ul className="list-disc pl-5 space-y-2">
           {recommendations.map((recommendation, index) => (
-            <li key={index} className="text-yellow-900 font-medium">{recommendation}</li>
+            <li key={index} className="text-amber-950 font-semibold text-base">{recommendation}</li>
           ))}
         </ul>
       </div>
       
-      <div className="mt-4 text-sm text-gray-700 font-medium">
+      <div className="mt-4 text-sm font-semibold text-gray-700">
         Last soil test: {new Date(currentSoilHealth.lastUpdated || '').toLocaleDateString()}
       </div>
     </div>
