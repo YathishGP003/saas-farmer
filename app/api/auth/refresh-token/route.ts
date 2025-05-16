@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { verifyToken, generateTokens, setAuthCookies, getTokenFromRequest } from '@/utils/auth';
+import { findUserById } from '@/lib/services/userService';
+import { verifyToken, generateTokens } from '@/utils/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get refresh token from cookies or request body
-    let refreshToken = getTokenFromRequest(true);
-    
-    // If no token in cookies, try to get from request body
-    if (!refreshToken) {
-      try {
-        const body = await request.json();
-        refreshToken = body.refreshToken;
-      } catch (e) {
-        // No body or invalid JSON
-      }
+    // Get refresh token from request body
+    let refreshToken;
+    try {
+      const body = await request.json();
+      refreshToken = body.refreshToken;
+    } catch (e) {
+      // No body or invalid JSON
     }
 
     // If no refresh token found
@@ -29,9 +25,7 @@ export async function POST(request: NextRequest) {
     const tokenPayload = verifyToken(refreshToken, true);
 
     // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { id: tokenPayload.userId },
-    });
+    const user = await findUserById(tokenPayload.userId);
 
     if (!user) {
       return NextResponse.json(
@@ -42,12 +36,9 @@ export async function POST(request: NextRequest) {
 
     // Generate new tokens
     const tokens = generateTokens({
-      userId: user.id,
+      userId: user.id!,
       email: user.email,
     });
-
-    // Set cookies
-    setAuthCookies(tokens);
 
     // Return new tokens
     return NextResponse.json({
@@ -64,16 +55,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  try {
-    // Get refresh token from cookies
-    let refreshToken = await getTokenFromRequest(true);
-    
-    // ... existing code ...
-  } catch (error) {
-    console.error('Refresh token error:', error);
-    return NextResponse.json(
-      { error: 'Invalid or expired refresh token' },
-      { status: 401 }
-    );
-  }
+  return NextResponse.json(
+    { error: 'Method not supported, use POST instead' },
+    { status: 405 }
+  );
 } 

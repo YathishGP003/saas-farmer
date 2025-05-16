@@ -1,38 +1,13 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { cropData, getCurrentSeason, getHarvestSeason, regionClimateData } from '@/utils/cropData';
 import prisma from '@/lib/prisma';
 import { getTokenFromHeader, verifyToken } from '@/utils/auth';
 import { TokenPayload } from '@/utils/auth';
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { generateJSON } from '@/utils/ollama';
 
 export async function POST(request: Request) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('authorization');
-    const token = getTokenFromHeader(authHeader);
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-    
-    // Verify token and get user ID
-    let userData: TokenPayload;
-    try {
-      userData = verifyToken(token);
-    } catch (error) {
-      return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 401 }
-      );
-    }
+    // Authentication check removed for local development
 
     const { timeRange, state, plantingSeason, soilType, language = 'english' } = await request.json();
     
@@ -43,7 +18,7 @@ export async function POST(request: Request) {
     const currentSeason = getCurrentSeason();
     const harvestSeason = getHarvestSeason(timeRange);
     
-    // Use GPT to generate crop suggestions
+    // Use Ollama to generate crop suggestions
     const suggestions = await generateCropSuggestions(
       timeRange,
       state,
@@ -55,33 +30,8 @@ export async function POST(request: Request) {
       language
     );
     
-    // Try to save the query to database
-    try {
-      // Create a structured record in the database
-      await prisma.$queryRaw`
-        INSERT INTO crop_queries (
-          user_id, 
-          crop_name,
-          region,
-          date_range,
-          queried_at,
-          created_at,
-          updated_at
-        ) 
-        VALUES (
-          ${userData.userId}, 
-          'Multiple crops',
-          ${state},
-          ${timeRange.toString()},
-          NOW(),
-          NOW(),
-          NOW()
-        )
-      `;
-    } catch (dbError) {
-      console.error('Error saving crop suggestion to database:', dbError);
-      // Continue with response even if database save fails
-    }
+    // Database saving removed for local development
+    // No user authentication required
     
     return NextResponse.json(suggestions);
   } catch (error) {
@@ -130,7 +80,7 @@ function getStateClimateData(state: string) {
   return regionClimateData["default"];
 }
 
-// Use OpenAI to generate crop suggestions
+// Use Ollama to generate crop suggestions
 async function generateCropSuggestions(
   timeRange: number,
   state: string,
@@ -195,21 +145,30 @@ Format your response as JSON with the following structure:
 IMPORTANT: Please provide your entire response in ${language} language.
 `;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini", // Use appropriate model
-      messages: [
-        { role: "system", content: `You are an agricultural expert system specializing in Indian agriculture. You provide detailed, scientifically-accurate crop recommendations based on local conditions. Respond in ${language} language.` },
-        { role: "user", content: prompt }
-      ],
-      response_format: { type: "json_object" }
-    });
+    const systemPrompt = `You are an agricultural expert system specializing in Indian agriculture. You provide detailed, scientifically-accurate crop recommendations based on local conditions. Respond in ${language} language.`;
 
-    const content = response.choices[0].message.content;
-    if (!content) {
-      throw new Error("Empty response from OpenAI");
+    // Use the utility function to generate JSON
+    try {
+      const result = await generateJSON<{
+        message: string;
+        suggestedCrops: { name: string; rationale: string }[];
+      }>('llama3', prompt, systemPrompt);
+      
+      return result;
+    } catch (error) {
+      console.error('Error generating JSON with Ollama:', error);
+      
+      // Fallback to a simple structure if parsing fails
+      return {
+        message: "There was an error processing your request in the expected format.",
+        suggestedCrops: [
+          {
+            name: "Response format error",
+            rationale: "We encountered a technical issue while analyzing your data. Please try again with different parameters or contact support if the problem persists."
+          }
+        ]
+      };
     }
-    
-    return JSON.parse(content);
   } catch (error) {
     console.error('Error generating crop suggestions:', error);
     return {

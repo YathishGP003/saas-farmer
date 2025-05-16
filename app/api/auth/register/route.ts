@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
-import { hashPassword, generateTokens, setAuthCookies } from '@/utils/auth';
+import { findUserByEmail, createUser } from '@/lib/services/userService';
+import { hashPassword, generateTokens } from '@/utils/auth';
 
 // Validation schema for registration
 const registerSchema = z.object({
@@ -29,9 +29,7 @@ export async function POST(request: NextRequest) {
     const { fullName, email, phone, password } = validationResult.data;
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await findUserByEmail(email);
 
     if (existingUser) {
       return NextResponse.json(
@@ -44,24 +42,19 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hashPassword(password);
 
     // Create new user
-    const newUser = await prisma.user.create({
-      data: {
-        fullName,
-        email,
-        phone,
-        passwordHash,
-        lastLoginAt: new Date(),
-      },
+    const newUser = await createUser({
+      fullName,
+      email,
+      phone,
+      passwordHash,
+      lastLoginAt: new Date(),
     });
 
     // Generate tokens
     const tokens = generateTokens({
-      userId: newUser.id,
+      userId: newUser.id!,
       email: newUser.email,
     });
-
-    // Set cookies
-    setAuthCookies(tokens);
 
     // Return user data and tokens
     return NextResponse.json({

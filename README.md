@@ -33,6 +33,13 @@ Get personalized farming advice based on:
   - Pest risk alerts based on humidity and temperature
   - Crop protection and preventative measures
 
+### Ollama Integration
+
+The application now offers local AI capabilities through Ollama integration:
+- Crop suggestions powered by local LLMs
+- Chatbot functionality running completely on your machine
+- Privacy-preserving AI assistance without sending data to external APIs
+
 Features include:
 - GPS/location-based weather data
 - Manual city selection
@@ -44,9 +51,10 @@ Features include:
 ### Prerequisites
 
 1. Node.js 18.x or higher
-2. OpenAI API key with access to GPT-4 Vision and GPT-4o
-3. OpenWeatherMap API key
+2. OpenAI API key for plant disease detection
+3. OpenWeatherMap API key 
 4. Twilio account (for WhatsApp integration)
+5. [Ollama](https://ollama.com/) installed and running for local AI features
 
 ### Setup
 
@@ -68,23 +76,45 @@ JWT_ACCESS_SECRET=your_access_secret_here
 JWT_REFRESH_SECRET=your_refresh_secret_here
 ```
 
-4. Run the development server:
+4. Install and set up Ollama (optional but recommended for chatbot and crop suggestions):
+   - Download and install Ollama from [https://ollama.com/](https://ollama.com/)
+   - Start the Ollama service
+   - Pull a model (recommended: llama3): `ollama pull llama3`
+
+5. Run the development server:
 
 ```bash
 npm run dev
 ```
 
-5. (Optional) Start the weather update service for hourly updates:
+6. (Optional) Start the weather update service for hourly updates:
 
 ```bash
 npm run weather:update
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
+7. Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
 
-7. Navigate to [Dashboard](http://localhost:3000/dashboard) to view weather forecast and farming advice.
-8. Navigate to [Plant Disease Detection](http://localhost:3000/plant-disease) to use the plant disease analysis feature.
-9. Navigate to [WhatsApp Bot Setup](http://localhost:3000/whatsapp-bot) to set up the WhatsApp integration.
+8. Navigate to [Dashboard](http://localhost:3000/dashboard) to view weather forecast and farming advice.
+9. Navigate to [Plant Disease Detection](http://localhost:3000/plant-disease) to use the plant disease analysis feature.
+10. Navigate to [WhatsApp Bot Setup](http://localhost:3000/whatsapp-bot) to set up the WhatsApp integration.
+
+## AI Model Configuration
+
+The application uses a hybrid approach to AI services:
+
+- **Ollama (Local)**:
+  - Crop suggestions feature
+  - Chatbot functionality
+  - Edit the model name in `utils/ollama.ts` to use different local models
+
+- **OpenAI (API)**:
+  - Plant disease detection (using Vision APIs)
+  - Any feature requiring image analysis
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## How to Use Plant Disease Detection
 

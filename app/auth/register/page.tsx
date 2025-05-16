@@ -64,8 +64,8 @@ export default function RegisterPage() {
         );
       }
 
-      // Redirect to dashboard on success
-      router.push('/dashboard');
+      // Redirect to landing page on success
+      router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {

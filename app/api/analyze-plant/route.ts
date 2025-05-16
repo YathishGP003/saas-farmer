@@ -62,7 +62,7 @@ const openai = new OpenAI({
  *       500:
  *         description: Failed to process the image or internal server error
  */
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     // Create a temporary directory if it doesn't exist
     const tempDir = path.join(process.cwd(), 'tmp');

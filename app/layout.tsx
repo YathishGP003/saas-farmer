@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgriLearnNetwork - AI-Powered Farming Solutions",
+  title: "kisan sahayak - AI-Powered Farming Solutions",
   description: "Empowering farmers with AI-driven tools for plant disease detection, crop suggestions, soil management, and weather forecasts.",
 };
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+import { findUserByEmail, updateUser } from '@/lib/services/userService';
 import { verifyPassword, generateTokens } from '@/utils/auth';
 
 // Validation schema for login
@@ -102,9 +102,7 @@ export async function POST(request: NextRequest) {
     const { email, password } = validationResult.data;
 
     // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await findUserByEmail(email);
 
     // If user doesn't exist or password is incorrect
     if (!user) {
@@ -125,14 +123,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Update last login time
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
+    const now = new Date();
+    await updateUser(user.id!, { lastLoginAt: now });
 
     // Generate tokens
     const tokens = generateTokens({
-      userId: user.id,
+      userId: user.id!,
       email: user.email,
     });
 

@@ -24,14 +24,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-green-700">AgriLearnNetwork</h1>
+              <h1 className="text-2xl font-bold text-green-700">Kisan Sahayak</h1>
             </div>
             <nav className="hidden md:flex space-x-6">
               <Link href="/" className="text-gray-700 hover:text-green-600">Home</Link>
               <Link href="/plant-disease" className="text-gray-700 hover:text-green-600">Disease Detection</Link>
               <Link href="/crop-suggestion" className="text-gray-700 hover:text-green-600">Crop Suggestion</Link>
-              <Link href="/soil-analysis" className="text-gray-700 hover:text-green-600">Soil Analysis</Link>
-              <Link href="/dashboard" className="text-gray-700 hover:text-green-600">Dashboard</Link>
+              <Link href="/chatbot" className="text-gray-700 hover:text-green-600">AI Assistant</Link>
+
             </nav>
             <div className="hidden md:flex space-x-4">
               {!isLoggedIn && (
@@ -44,11 +44,7 @@ export default function LandingPage() {
                   </Link>
                 </>
               )}
-              {isLoggedIn && (
-                <Link href="/dashboard" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                  Dashboard
-                </Link>
-              )}
+
             </div>
           </div>
         </div>
@@ -69,8 +65,8 @@ export default function LandingPage() {
             <Link href="/plant-disease" className="btn-primary">
               Upload Plant Image
             </Link>
-            <Link href="/dashboard" className="btn-secondary">
-              View Dashboard
+            <Link href="/chatbot" className="btn-secondary">
+              Chat with AI
             </Link>
           </div>
         </div>
@@ -94,7 +90,7 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-center mb-4">Plant Disease Detection</h3>
+              <h3 className="text-xl font-semibold text-center mb-4 text-slate-700">Plant Disease Detection</h3>
               <p className="text-gray-600 mb-6">
                 Upload an image of a diseased plant and get instant AI-powered diagnosis with treatment recommendations.
               </p>
@@ -112,7 +108,7 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-center mb-4">Crop Suggestion</h3>
+              <h3 className="text-xl font-semibold text-center mb-4 text-slate-700">Crop Suggestion</h3>
               <p className="text-gray-600 mb-6">
                 Get personalized crop suggestions based on your location, season, and market forecasts.
               </p>
@@ -130,13 +126,13 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-center mb-4">Soil Analysis</h3>
+              <h3 className="text-xl font-semibold text-center mb-4 text-slate-700">AI Assistant</h3>
               <p className="text-gray-600 mb-6">
-                Enter your soil data and receive customized advice on soil improvement and fertilization.
+                Chat with our AI farming assistant to get quick answers to all your agricultural questions and expert advice.
               </p>
               <div className="text-center">
-                <Link href="/soil-analysis" className="inline-block w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md text-center">
-                  Analyze Soil
+                <Link href="/chatbot" className="inline-block w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md text-center">
+                  Ask AI Assistant
                 </Link>
               </div>
             </div>
@@ -181,14 +177,14 @@ export default function LandingPage() {
               <ul className="space-y-2">
                 <li><Link href="/plant-disease" className="text-gray-600 hover:text-green-600">Disease Detection</Link></li>
                 <li><Link href="/crop-suggestion" className="text-gray-600 hover:text-green-600">Crop Suggestions</Link></li>
-                <li><Link href="/soil-analysis" className="text-gray-600 hover:text-green-600">Soil Analysis</Link></li>
+                <li><Link href="/chatbot" className="text-gray-600 hover:text-green-600">AI Assistant</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold text-gray-900 mb-4">RESOURCES</h4>
               <ul className="space-y-2">
-                <li><Link href="/dashboard" className="text-gray-600 hover:text-green-600">Dashboard</Link></li>
+
                 {!isLoggedIn && (
                   <>
                     <li><Link href="/auth/login" className="text-gray-600 hover:text-green-600">Sign In</Link></li>

@@ -1,53 +1,44 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from '@/utils/auth';
+import { getDb } from '@/lib/mongodb';
+import { createUser, findUserByEmail } from '@/lib/services/userService';
 
-const prisma = new PrismaClient();
-
-async function main() {
+async function seedAdminUser() {
   try {
-    // Get admin details from environment variables
-    const email = process.env.ADMIN_EMAIL;
-    const password = process.env.ADMIN_PASSWORD;
-    const fullName = process.env.ADMIN_FULL_NAME;
-
-    if (!email || !password || !fullName) {
-      console.error('Admin credentials not found in environment variables');
-      console.error('Please set ADMIN_EMAIL, ADMIN_PASSWORD, and ADMIN_FULL_NAME environment variables');
-      process.exit(1);
-    }
-
+    console.log('Starting admin user seeding...');
+    
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'AdminPassword123';
+    
     // Check if admin already exists
-    const existingAdmin = await prisma.user.findUnique({
-      where: { email },
-    });
-
+    const existingAdmin = await findUserByEmail(adminEmail);
+    
     if (existingAdmin) {
-      console.log(`Admin user with email ${email} already exists`);
-      process.exit(0);
+      console.log(`Admin user already exists with email: ${adminEmail}`);
+      return;
     }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    // Create admin user
-    const admin = await prisma.user.create({
-      data: {
-        email,
-        fullName,
-        passwordHash,
-        lastLoginAt: new Date(),
-      },
+    
+    // Hash the password
+    const passwordHash = await hashPassword(adminPassword);
+    
+    // Create the admin user
+    const adminUser = await createUser({
+      fullName: 'Admin User',
+      email: adminEmail,
+      passwordHash,
+      lastLoginAt: new Date()
     });
-
-    console.log(`Admin user created with email: ${admin.email}`);
-    console.log(`Admin ID: ${admin.id}`);
+    
+    console.log(`Admin user created successfully with ID: ${adminUser.id}`);
+    console.log(`Email: ${adminEmail}`);
+    console.log(`Password: ${adminPassword} (only displayed once)`);
+    
+    console.log('Admin user seeding completed!');
   } catch (error) {
     console.error('Error seeding admin user:', error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    process.exit(0);
   }
 }
 
-main(); 
+seedAdminUser(); 

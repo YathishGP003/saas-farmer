@@ -83,4 +83,12 @@ export interface GptAlert {
   regions: string[];
   crops: string[];
   created: string;
+}
+
+// Chatbot Types
+export interface ChatMessage {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant';
+  timestamp: Date;
 } 
