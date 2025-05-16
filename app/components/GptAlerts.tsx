@@ -99,7 +99,7 @@ export default function GptAlerts() {
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Smart AI Alerts</h2>
+        <h2 className="text-xl font-bold text-slate-700">Smart AI Alerts</h2>
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
           Powered by GPT
         </span>
