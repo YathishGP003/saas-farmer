@@ -1,82 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OpenAI } from 'openai';
-
-import fs from 'fs';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
+import fs from 'fs';
 import { mkdir } from 'fs/promises';
+import { generateJSON } from '@/utils/ollama';
+const ollama_model  = process.env.OLLAMA_MODEL;
+const OLLAMA_BASE_URL = process.env.OLLAMA_HOST
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Make sure to set this in your environment variables
-});
-
-/**
- * @swagger
- * /api/analyze-plant:
- *   post:
- *     tags:
- *       - Plant Disease
- *     summary: Analyze plant disease from image
- *     description: Upload an image of a plant to detect diseases and get treatment recommendations
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - image
- *             properties:
- *               image:
- *                 type: string
- *                 format: binary
- *                 description: The plant image to analyze
- *               language:
- *                 type: string
- *                 description: The language for the response
- *                 example: "english"
- *     responses:
- *       200:
- *         description: Successful analysis
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 name:
- *                   type: string
- *                   description: The name of the detected disease
- *                   example: "Leaf Spot Disease"
- *                 cure:
- *                   type: string
- *                   description: Recommendations for treating the disease
- *                   example: "Apply fungicide containing chlorothalonil. Remove and destroy infected leaves. Ensure proper air circulation around plants."
- *                 prevention:
- *                   type: string
- *                   description: Tips to prevent the disease in the future
- *                   example: "Avoid overhead watering. Plant resistant varieties. Rotate crops regularly. Maintain proper plant spacing."
- *       400:
- *         description: No image file provided or invalid request
- *       500:
- *         description: Failed to process the image or internal server error
- */
-export async function GET(req: NextRequest) {
+const execAsync = promisify(exec);
+export async function generateText(
+  model: string = 'llama3',
+  prompt: string,
+  systemPrompt?: string
+): Promise<string> {
   try {
-    // Create a temporary directory if it doesn't exist
+    const requestBody: any = {
+      model: model,
+      prompt: prompt,
+      stream: false,
+    };
+
+    if (systemPrompt) {
+      requestBody.system = systemPrompt;
+    }
+
+    const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.response;
+  } catch (error) {
+    console.error('Error calling Ollama API:', error);
+    throw error;
+  }
+}
+
+
+export async function POST(req: NextRequest) {
+  try {
     const tempDir = path.join(process.cwd(), 'tmp');
     try {
       await mkdir(tempDir, { recursive: true });
     } catch (error) {
-      // Directory already exists or cannot be created
       console.error('Error creating temp directory:', error);
     }
 
-    // Parse form data with image
     const formData = await req.formData();
     const imageFile = formData.get('image') as File;
-    const language = formData.get('language') as string || 'english';
 
     if (!imageFile) {
       return NextResponse.json(
@@ -85,80 +65,65 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Convert file to buffer
     const arrayBuffer = await imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Save image temporarily
     const imagePath = path.join(tempDir, `upload-${Date.now()}.jpg`);
     await fs.promises.writeFile(imagePath, buffer);
 
-    // Convert image to base64
     const imageBase64 = buffer.toString('base64');
-    const dataUrl = `data:${imageFile.type};base64,${imageBase64}`;
-
-    // Call GPT-4 Vision API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4.1-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a plant disease detection specialist. Analyze the provided plant image and identify any diseases or issues present. Provide your response in ${language} language.`
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `This is an image of a plant that may have a disease. Please analyze it and provide the following details in JSON format: 1) Disease name, 2) Cure recommendations, 3) Prevention tips. Please format your response as a valid JSON object with fields "name", "cure", and "prevention". Provide your entire response in ${language} language.`,
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: dataUrl,
-                detail: 'high'
-              },
-            },
-          ],
-        },
-      ],
-      max_tokens: 1000,
-      response_format: { type: 'json_object' }
-    });
-
-    // Clean up temporary file
+    
+    const pythonScript = path.join(process.cwd(), 'scripts', 'predict.py');
+    
+    const { stdout, stderr } = await execAsync(`python3.12 ${pythonScript} "${imageBase64}"`);
+    
     try {
       await fs.promises.unlink(imagePath);
     } catch (error) {
       console.error('Error deleting temporary file:', error);
     }
-
-    // Parse result
-    const result = response.choices[0].message.content;
-    if (!result) {
+    
+    if (stderr) {
+      console.error('Error from Python script:', stderr);
       return NextResponse.json(
-        { error: 'Failed to analyze the image' },
+        { error: 'Error running prediction script', details: stderr },
+        { status: 500 }
+      );
+    }
+    
+    const result = JSON.parse(stdout.trim());
+    
+    if (result.error) {
+      return NextResponse.json(
+        { error: result.error },
         { status: 500 }
       );
     }
 
-    // Parse the JSON string from the OpenAI response
-    const analysisResult = JSON.parse(result);
-
-    return NextResponse.json(analysisResult);
+    // Get treatment information from Ollama
+    const prompt = `Please provide detailed information about ${result.disease} in plants, including its symptoms, treatment methods, and prevention measures.`;
+    const systemPrompt = 'You are an agricultural expert specializing in plant diseases. Provide comprehensive and practical information.';
+    
+    const treatmentInfo = await generateText(ollama_model, prompt, systemPrompt);
+    
+    return NextResponse.json({
+      disease: result.disease,
+      confidence: result.confidence,
+      date: result.date,
+      treatmentInfo: treatmentInfo
+    });
   } catch (error) {
     console.error('Error processing image:', error);
     return NextResponse.json(
-      { error: 'Failed to process the image' },
+      { error: 'Failed to process the image', details: String(error) },
       { status: 500 }
     );
   }
 }
 
-// Increase payload size limit for image uploads
 export const config = {
   api: {
     bodyParser: false,
     responseLimit: '10mb',
   },
-}; 
+};

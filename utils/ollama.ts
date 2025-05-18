@@ -69,8 +69,14 @@ export async function generateJSON<T>(
     } catch (parseError) {
       console.error('Error parsing Ollama response as JSON:', parseError);
       
-      // Attempt to extract JSON from the response text
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      // Remove any markdown code block syntax if present
+      let cleanedContent = content
+        .replace(/```json\s+/g, '')  // Remove opening ```json tag
+        .replace(/```\s*$/g, '')    // Remove closing ``` tag
+        .trim();
+      
+      // Attempt to extract JSON from the cleaned response text
+      const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
           return JSON.parse(jsonMatch[0]) as T;

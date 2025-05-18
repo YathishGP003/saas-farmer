@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getTokenFromHeader, verifyToken } from '@/utils/auth';
-import { TokenPayload } from '@/utils/auth';
 import { generateText } from '@/utils/ollama';
+
+const ollama_model = process.env.OLLAMA_MODEL;
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const systemPrompt = "You are an AI assistant specialized in agriculture, farming, and related topics. You provide helpful, accurate, and practical advice to farmers. Your responses should be informative, respectful, and tailored to the agricultural context. If you're unsure about something, be honest about limitations rather than making up information.";
 
     // Use the utility function to generate a response
-    const responseText = await generateText('llama3', message, systemPrompt);
+    const responseText = await generateText(ollama_model, message, systemPrompt);
     
     if (!responseText) {
       return NextResponse.json(

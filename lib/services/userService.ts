@@ -20,6 +20,7 @@ export async function findUserByEmail(email: string): Promise<User | null> {
   const db = await getDb();
   const user = await db.collection('users').findOne({ email });
   if (!user) return null;
+  // @ts-ignore
   return {
     ...user,
     id: user._id.toString()
@@ -30,6 +31,7 @@ export async function findUserById(id: string): Promise<User | null> {
   const db = await getDb();
   const user = await db.collection('users').findOne({ _id: new ObjectId(id) });
   if (!user) return null;
+  // @ts-ignore
   return {
     ...user,
     id: user._id.toString()
