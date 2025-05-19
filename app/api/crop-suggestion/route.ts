@@ -1,49 +1,21 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { cropData, getCurrentSeason, getHarvestSeason, regionClimateData } from '@/utils/cropData';
-import prisma from '@/lib/prisma';
-import { getTokenFromHeader, verifyToken } from '@/utils/auth';
-import { TokenPayload } from '@/utils/auth';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { generateJSON, generateText } from '@/utils/ollama';
+const ollama_model = process.env.OLLAMA_MODEL;
 
 export async function POST(request: Request) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('authorization');
-    const token = getTokenFromHeader(authHeader);
     
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-    
-    // Verify token and get user ID
-    let userData: TokenPayload;
-    try {
-      userData = verifyToken(token);
-    } catch (error) {
-      return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 401 }
-      );
-    }
 
     const { timeRange, state, plantingSeason, soilType, language = 'english' } = await request.json();
     
-    // Get climate data for the state
+   
     const climateData = getStateClimateData(state);
     
-    // Determine current and harvest seasons
     const currentSeason = getCurrentSeason();
     const harvestSeason = getHarvestSeason(timeRange);
     
-    // Use GPT to generate crop suggestions
     const suggestions = await generateCropSuggestions(
       timeRange,
       state,
@@ -55,33 +27,6 @@ export async function POST(request: Request) {
       language
     );
     
-    // Try to save the query to database
-    try {
-      // Create a structured record in the database
-      await prisma.$queryRaw`
-        INSERT INTO crop_queries (
-          user_id, 
-          crop_name,
-          region,
-          date_range,
-          queried_at,
-          created_at,
-          updated_at
-        ) 
-        VALUES (
-          ${userData.userId}, 
-          'Multiple crops',
-          ${state},
-          ${timeRange.toString()},
-          NOW(),
-          NOW(),
-          NOW()
-        )
-      `;
-    } catch (dbError) {
-      console.error('Error saving crop suggestion to database:', dbError);
-      // Continue with response even if database save fails
-    }
     
     return NextResponse.json(suggestions);
   } catch (error) {
@@ -93,21 +38,17 @@ export async function POST(request: Request) {
   }
 }
 
-// Get climate data for a specific state
 function getStateClimateData(state: string) {
-  // Normalize state name to match with our data
   const stateLower = state.toLowerCase();
   
-  // Try to find direct match or partial match
   for (const region in regionClimateData) {
     if (stateLower.includes(region) || region.includes(stateLower)) {
       return regionClimateData[region];
     }
   }
   
-  // Check for specific state mappings
   const stateToRegionMap: Record<string, string> = {
-    "andhra pradesh": "maharashtra", // Similar climate
+    "andhra pradesh": "maharashtra",
     "telangana": "maharashtra",
     "tamil nadu": "kerala",
     "madhya pradesh": "maharashtra",
@@ -130,7 +71,6 @@ function getStateClimateData(state: string) {
   return regionClimateData["default"];
 }
 
-// Use OpenAI to generate crop suggestions
 async function generateCropSuggestions(
   timeRange: number,
   state: string,
@@ -146,80 +86,123 @@ async function generateCropSuggestions(
     const harvestDate = new Date();
     harvestDate.setMonth(harvestDate.getMonth() + timeRange);
     
-    // Extract the actual season name from the selection (remove the description)
     const selectedSeason = plantingSeason.split(" ")[0];
     
-    // Prepare the prompt
     const prompt = `
-As an agricultural expert, I need detailed crop recommendations based on the following information:
-
-PARAMETERS:
+I need crop recommendations for these farming conditions:
 - State: ${state}
-- Soil Type: ${soilType}
-- Planting Season: ${plantingSeason}
-- Time to Harvest: ${timeRange} months
-- Current Date: ${currentDate.toLocaleDateString()}
-- Projected Harvest Date: ${harvestDate.toLocaleDateString()}
+- Soil: ${soilType}
+- Season: ${selectedSeason}
+- Growing period: ${timeRange} months
+- Climate: ${climateData.description || `${state} climate`}
+- Rainfall: ${climateData.rainfall || "Variable"}
 
-CLIMATE INFORMATION:
-- Climate conditions: ${climateData.description || `Climate in ${state} varies throughout the year`}
-- Rainfall pattern: ${climateData.rainfall || "Variable"}
+Please recommend 3-4 suitable crops. For each crop, include:
+1. The crop name
+2. Why it's good for this climate, soil, and growing period
 
-Please recommend 4-5 crops that would be suitable for this specific combination of state, soil type, planting season, and harvest timeline. For each recommended crop, provide:
+Keep each explanation brief but informative.
 
-1. The name of the crop
-2. A detailed explanation including:
-   - Why this crop is ideal for ${state}'s climate
-   - How this crop performs in ${soilType} soil
-   - Why the crop is suitable for planting in ${selectedSeason} season
-   - Whether the ${timeRange}-month growing period aligns with the crop's optimal harvest time
-   - Any special considerations for this crop in terms of irrigation, fertilization, or pest management
-   - Expected market potential at the projected harvest time
-
-Format your response as JSON with the following structure:
+RESPOND IN EXACTLY THIS JSON FORMAT (very important):
 {
-  "message": "A brief overview of the agricultural situation and general advice",
+  "message": "Brief overview of farming situation",
   "suggestedCrops": [
     {
-      "name": "Crop Name 1",
-      "rationale": "Detailed explanation for this crop recommendation"
+      "name": "Crop Name",
+      "rationale": "Explanation why suitable"
     },
-    {
-      "name": "Crop Name 2",
-      "rationale": "Detailed explanation for this crop recommendation"
-    },
-    ... more crops
+    ...
   ]
 }
 
-IMPORTANT: Please provide your entire response in ${language} language.
+Provide your response in ${language} language.
 `;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini", // Use appropriate model
-      messages: [
-        { role: "system", content: `You are an agricultural expert system specializing in Indian agriculture. You provide detailed, scientifically-accurate crop recommendations based on local conditions. Respond in ${language} language.` },
-        { role: "user", content: prompt }
-      ],
-      response_format: { type: "json_object" }
-    });
+    const systemPrompt = `You are an agricultural expert specialized in Indian farming. You provide accurate crop recommendations based on local conditions. You ALWAYS respond in valid JSON format exactly as requested. Respond in ${language}.`;
 
-    const content = response.choices[0].message.content;
-    if (!content) {
-      throw new Error("Empty response from OpenAI");
+
+    try {
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out')), 12000); // 12 seconds timeout
+      });
+      
+      const resultPromise = generateJSON<{
+        message: string;
+        suggestedCrops: { name: string; rationale: string }[];
+      }>('llama3.2', prompt, systemPrompt);
+      
+      const result = await Promise.race([resultPromise, timeoutPromise]) as {
+        message: string;
+        suggestedCrops: { name: string; rationale: string }[];
+      };
+      
+      if (!result.message || !Array.isArray(result.suggestedCrops)) {
+        throw new Error('Invalid response format');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error with JSON generation, falling back to text extraction:', error);
+      
+      try {
+        const rawText = await generateText(ollama_model, prompt, systemPrompt);
+        console.log('Raw response:', rawText);
+        
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const extractedJson = JSON.parse(jsonMatch[0]);
+            
+            if (extractedJson && extractedJson.message && Array.isArray(extractedJson.suggestedCrops)) {
+              return extractedJson;
+            }
+          } catch (err) {
+            console.error('Failed to parse extracted JSON:', err);
+          }
+        }
+        
+        return {
+          message: "Based on your criteria, here are some crop suggestions:",
+          suggestedCrops: [
+            {
+              name: "General Recommendation",
+              rationale: rawText.substring(0, 500)
+            }
+          ]
+        };
+      } catch (textError) {
+        console.error('Text generation fallback also failed:', textError);
+        return createFallbackResponse(language);
+      }
     }
-    
-    return JSON.parse(content);
   } catch (error) {
     console.error('Error generating crop suggestions:', error);
-    return {
-      message: "There was an error processing your request. Please try again later.",
-      suggestedCrops: [
-        {
-          name: "Unable to generate recommendations",
-          rationale: "We encountered a technical issue while analyzing your data. Please try again with different parameters or contact support if the problem persists."
-        }
-      ]
-    };
+    return createFallbackResponse(language);
   }
+}
+
+function createFallbackResponse(language: string) {
+  const messages = {
+    english: {
+      message: "We encountered a technical issue while analyzing your data.",
+      error: "Please try again with different parameters or contact support if the problem persists."
+    },
+    hindi: {
+      message: "आपके डेटा का विश्लेषण करते समय हमें एक तकनीकी समस्या का सामना करना पड़ा।",
+      error: "कृपया अलग पैरामीटर के साथ फिर से प्रयास करें या यदि समस्या बनी रहती है तो सहायता से संपर्क करें।"
+    }
+  };
+  
+  const lang = language.toLowerCase();
+  const msg = messages[lang as keyof typeof messages] || messages.english;
+  
+  return {
+    message: msg.message,
+    suggestedCrops: [
+      {
+        name: "Temporary Issue",
+        rationale: msg.error
+      }
+    ]
+  };
 }
